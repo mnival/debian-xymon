@@ -34,7 +34,6 @@ ADD supervisor-nginx.conf /etc/supervisor/conf.d/nginx.conf
 
 ADD event-supervisor/event-supervisor.sh /usr/local/bin/event-supervisor.sh
 ADD event-supervisor/supervisor-eventlistener.conf /etc/supervisor/conf.d/eventlistener.conf
-RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/
 RUN sed -i 's/^\(logfile.*\)/#\1/' /etc/supervisor/supervisord.conf
 ADD event-supervisor/supervisor-eventlistener.conf /etc/supervisor/conf.d/eventlistener.conf
 
