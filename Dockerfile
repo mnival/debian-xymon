@@ -3,7 +3,6 @@ FROM debian:stable
 LABEL maintainer="Michael Nival <docker@mn-home.fr>" \
 	name="debian-xymon" \
 	description="Debian Stable with Xymon, nginx-light, fcgiwrap, ssmtp, supervisor" \
-	version=1.0 \
 	docker.cmd="printf "SSMTP_mailhub=mail.example.com\nSSMTP_AuthUser=user\nSSMTP_AuthPass=password\nSSMTP_AuthMethod=LOGIN\nSSMTP_UseTLS=Yes\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
 
 RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian.org/debian/ stable-updates main\ndeb http://security.debian.org/ stable/updates main\n" >> /etc/apt/sources.list.d/stable.list && \
@@ -29,14 +28,15 @@ ADD nginx-xymon.conf /etc/nginx/sites-default-available/xymon.conf
 
 RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/
 
-RUN sed -i 's/^\(logfile.*\)/#\1/' /etc/supervisor/supervisord.conf && \
-	printf '#!/bin/bash\necho "READY"\nwhile read line\ndo\n\techo "Processing Event: $line" >&2\n\tkill -SIGQUIT $PPID\ndone < /dev/stdin\n' > /usr/local/bin/event-supervisor.sh && \
-	chmod +x /usr/local/bin/event-supervisor.sh && \
-	printf '[eventlistener:processes]\ncommand=/usr/local/bin/event-supervisor.sh\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\nevents=PROCESS_STATE_FATAL\n' > /etc/supervisor/conf.d/event-supervisor.conf
-
 ADD supervisor-xymon.conf /etc/supervisor/conf.d/xymon.conf
 ADD supervisor-fastcgi.conf /etc/supervisor/conf.d/fastcgi.conf
 ADD supervisor-nginx.conf /etc/supervisor/conf.d/nginx.conf
+
+ADD event-supervisor/event-supervisor.sh /usr/local/bin/event-supervisor.sh
+ADD event-supervisor/supervisor-eventlistener.conf /etc/supervisor/conf.d/eventlistener.conf
+RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/
+RUN sed -i 's/^\(logfile.*\)/#\1/' /etc/supervisor/supervisord.conf
+ADD event-supervisor/supervisor-eventlistener.conf /etc/supervisor/conf.d/eventlistener.conf
 
 EXPOSE 80 1984
 
