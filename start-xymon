@@ -8,7 +8,7 @@ conf-ssmtp
 test -f /etc/xymon/hosts.cfg || tar -C /etc/xymon -xzf /root/xymon-config.tgz
 test -d /var/lib/xymon/rrd || tar -C /var/lib/xymon -xzf /root/xymon-data.tgz
 
-rm -f /var/lib/xymon/tmp/*
+rm -f /var/lib/xymon/tmp/*[0-9]*
 
 egrep -q "^CLIENTHOSTNAME=\"${HOSTNAME}\"" /etc/default/xymon-client
 if [ $? -ne 0 ]

@@ -2,7 +2,7 @@ FROM debian:stable-slim
 
 LABEL maintainer="Michael Nival <docker@mn-home.fr>" \
 	name="debian-xymon" \
-	description="Debian Stable with Xymon, nginx-light, fcgiwrap, ssmtp, supervisor" \
+	description="Debian Stable with Xymon, nginx-light, fcgiwrap, ssmtp, supervisor s-nail" \
 	docker.cmd="printf "ssmtp.ssmtp.conf.mailhub=mail.example.com\nssmtp.ssmtp.conf.AuthUser=user\nssmtp.ssmtp.conf.AuthPass=password\nssmtp.ssmtp.conf.AuthMethod=LOGIN\nssmtp.ssmtp.conf.UseTLS=Yesssmtp.revaliases=local_account:outgoing_address:mailhub[;local_account:outgoing_address:mailhub]\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
 
 RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian.org/debian/ stable-updates main\ndeb http://security.debian.org/ stable/updates main\n" >> /etc/apt/sources.list.d/stable.list && \
@@ -10,7 +10,7 @@ RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian
 	export DEBIAN_FRONTEND=noninteractive && \
 	apt update && \
 	apt -y --no-install-recommends full-upgrade && \
-	apt install -y --no-install-recommends xymon nginx-light fcgiwrap supervisor ssmtp && \
+	apt install -y --no-install-recommends xymon nginx-light fcgiwrap supervisor ssmtp s-nail && \
 	sed -i "s/^CLIENTHOSTNAME.*/CLIENTHOSTNAME=\"HOSTNAME\"/" /etc/default/xymon-client && \
 	sed -i "s@^127.0.0.1.*@127.0.0.1\tHOSTNAME\t# bbd http://HOSTNAME/@" /etc/xymon/hosts.cfg && \
 	cat /dev/null > /etc/ssmtp/ssmtp.conf && \
