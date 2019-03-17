@@ -1,3 +1,0 @@
-[submodule "event-supervisor"]
-	path = event-supervisor
-	url = https://github.com/mnival/event-supervisor.git
