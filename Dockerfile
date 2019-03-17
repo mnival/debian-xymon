@@ -11,6 +11,7 @@ RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian
 	apt update && \
 	apt -y --no-install-recommends full-upgrade && \
 	apt install -y --no-install-recommends xymon nginx-light fcgiwrap supervisor ssmtp s-nail && \
+	update-alternatives --install /usr/bin/mail mail /usr/bin/s-nail 50 && \
 	sed -i "s/^CLIENTHOSTNAME.*/CLIENTHOSTNAME=\"HOSTNAME\"/" /etc/default/xymon-client && \
 	sed -i "s@^127.0.0.1.*@127.0.0.1\tHOSTNAME\t# bbd http://HOSTNAME/@" /etc/xymon/hosts.cfg && \
 	cat /dev/null > /etc/ssmtp/ssmtp.conf && \
