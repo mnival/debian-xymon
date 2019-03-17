@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Configure ssmtp
+conf-ssmtp
+
 . /usr/share/xymon/init-common.sh
 
 test -f /etc/xymon/hosts.cfg || tar -C /etc/xymon -xzf /root/xymon-config.tgz

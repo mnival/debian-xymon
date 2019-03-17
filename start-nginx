@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $_fh;
+my $_file_conf_realip = '/etc/nginx/conf.d/realip.conf';
+
+unless ( -e $_file_conf_realip ) {
+	open($_fh, '>', $_file_conf_realip);
+	foreach (sort keys %ENV) {
+		if ( $_ =~ m/nginx\.(.*)\.(.*)/ ) {
+			if ( $2 =~ m/(set_real_ip_from)/ ) {
+				foreach (split (/;/, $ENV{$_})) {
+					printf $_fh ("%s %s;\n", $1, $_);
+				}
+			} else {
+				printf $_fh ("%s %s;\n", $2, $ENV{$_});
+			}
+		}
+	}
+	close($_fh);
+}
+
+exec ("exec nginx -g 'daemon off;'");

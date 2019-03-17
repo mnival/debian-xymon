@@ -1,16 +1,20 @@
-FROM debian:stable
+FROM debian:stable-slim
 
 LABEL maintainer="Michael Nival <docker@mn-home.fr>" \
 	name="debian-xymon" \
 	description="Debian Stable with Xymon, nginx-light, fcgiwrap, ssmtp, supervisor" \
-	docker.cmd="printf "SSMTP_mailhub=mail.example.com\nSSMTP_AuthUser=user\nSSMTP_AuthPass=password\nSSMTP_AuthMethod=LOGIN\nSSMTP_UseTLS=Yes\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
+	docker.cmd="printf "ssmtp.ssmtp.conf.mailhub=mail.example.com\nssmtp.ssmtp.conf.AuthUser=user\nssmtp.ssmtp.conf.AuthPass=password\nssmtp.ssmtp.conf.AuthMethod=LOGIN\nssmtp.ssmtp.conf.UseTLS=Yesssmtp.revaliases=local_account:outgoing_address:mailhub[;local_account:outgoing_address:mailhub]\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
 
 RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian.org/debian/ stable-updates main\ndeb http://security.debian.org/ stable/updates main\n" >> /etc/apt/sources.list.d/stable.list && \
 	cat /dev/null > /etc/apt/sources.list && \
 	export DEBIAN_FRONTEND=noninteractive && \
 	apt update && \
 	apt -y --no-install-recommends full-upgrade && \
-	apt install -y --no-install-recommends xymon nginx-light fcgiwrap supervisor && \
+	apt install -y --no-install-recommends xymon nginx-light fcgiwrap supervisor ssmtp && \
+	sed -i "s/^CLIENTHOSTNAME.*/CLIENTHOSTNAME=\"HOSTNAME\"/" /etc/default/xymon-client && \
+	sed -i "s@^127.0.0.1.*@127.0.0.1\tHOSTNAME\t# bbd http://HOSTNAME/@" /etc/xymon/hosts.cfg && \
+	cat /dev/null > /etc/ssmtp/ssmtp.conf && \
+	cat /dev/null > /etc/ssmtp/revaliases && \
 	echo "Europe/Paris" > /etc/timezone && \
 	rm /etc/localtime && \
 	dpkg-reconfigure tzdata && \
@@ -23,21 +27,30 @@ RUN mkdir /etc/nginx/sites-default-enabled /etc/nginx/sites-default-available &&
 RUN tar -C /etc/xymon -czf /root/xymon-config.tgz . && \
 	tar -C /var/lib/xymon -czf /root/xymon-data.tgz .
 
-ADD start-xymon /usr/local/bin/start-xymon
+ADD start-xymon /usr/local/bin/
+ADD start-nginx /usr/local/bin/
+ADD conf-ssmtp /usr/local/bin/
 ADD nginx-xymon.conf /etc/nginx/sites-default-available/xymon.conf
 
 RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/
 
+RUN export DEBIAN_FRONTEND=noninteractive && \
+	apt update && \
+	apt install -y --no-install-recommends logrotate && \
+	sed -i 's@invoke-rc.d @/etc/init.d/@' /etc/logrotate.d/nginx && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/log/alternatives.log /var/log/dpkg.log /var/log/apt/ /var/cache/debconf/*-old
+
 ADD supervisor-xymon.conf /etc/supervisor/conf.d/xymon.conf
 ADD supervisor-fastcgi.conf /etc/supervisor/conf.d/fastcgi.conf
 ADD supervisor-nginx.conf /etc/supervisor/conf.d/nginx.conf
+ADD supervisor-cron.conf /etc/supervisor/conf.d/cron.conf
 
 ADD event-supervisor/event-supervisor.sh /usr/local/bin/event-supervisor.sh
 ADD event-supervisor/supervisor-eventlistener.conf /etc/supervisor/conf.d/eventlistener.conf
-RUN sed -i 's/^\(logfile.*\)/#\1/' /etc/supervisor/supervisord.conf
+RUN sed -i 's@^\(logfile\)=[a-z|A-Z|/|\.]*@\1=/dev/null@' /etc/supervisor/supervisord.conf
 
 EXPOSE 80 1984
 
-VOLUME ["/etc/xymon", "/var/lib/xymon"]
+VOLUME ["/etc/xymon", "/var/lib/xymon", "/var/log/xymon", "/var/log/nginx"]
 
 ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

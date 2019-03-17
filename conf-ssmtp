@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my ($_fh, $_type_conf, @_type_conf);
+my @_file_conf_ssmtp = ('/etc/ssmtp/revaliases', '/etc/ssmtp/ssmtp.conf');
+
+foreach (@_file_conf_ssmtp) {
+	open($_fh, '>', $_);
+	@_type_conf = split (/\//, $_);
+	$_type_conf = $_type_conf[$#_type_conf];
+	foreach (sort keys %ENV) {
+		if ( $_ =~ m/ssmtp\.${_type_conf}\.?(.*)?/ ) {
+			if ( ${_type_conf} =~ m/revaliases/ ) {
+				foreach (split (/;/, $ENV{$_})) {
+					printf $_fh ("%s\n",$_);
+				}
+			} else {
+				printf $_fh ("%s=%s\n", $1, $ENV{$_});
+			}
+		}
+	}
+	close ($_fh);
+}
