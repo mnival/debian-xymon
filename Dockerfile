@@ -33,7 +33,9 @@ ADD start-nginx /usr/local/bin/
 ADD conf-ssmtp /usr/local/bin/
 ADD nginx-xymon.conf /etc/nginx/sites-default-available/xymon.conf
 
-RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/
+RUN ln -sr /etc/nginx/sites-default-available/xymon.conf /etc/nginx/sites-default-enabled/ && \
+	ln -sr /usr/lib/xymon/cgi-bin/ /usr/lib/xymon/xymon-cgi && \
+	ln -sr /usr/lib/xymon/cgi-secure /usr/lib/xymon/xymon-seccgi
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt update && \
