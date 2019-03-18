@@ -2,7 +2,7 @@ FROM debian:stable-slim
 
 LABEL maintainer="Michael Nival <docker@mn-home.fr>" \
 	name="debian-xymon" \
-	description="Debian Stable with Xymon, nginx-light, fcgiwrap, ssmtp, supervisor s-nail" \
+	description="Debian Stable with the packages xymon nginx-light fcgiwrap supervisor ssmtp s-nail logrotate" \
 	docker.cmd="printf "ssmtp.ssmtp.conf.mailhub=mail.example.com\nssmtp.ssmtp.conf.AuthUser=user\nssmtp.ssmtp.conf.AuthPass=password\nssmtp.ssmtp.conf.AuthMethod=LOGIN\nssmtp.ssmtp.conf.UseTLS=Yesssmtp.revaliases=local_account:outgoing_address:mailhub[;local_account:outgoing_address:mailhub]\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
 
 RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian.org/debian/ stable-updates main\ndeb http://security.debian.org/ stable/updates main\n" >> /etc/apt/sources.list.d/stable.list && \
@@ -52,6 +52,6 @@ RUN sed -i 's@^\(logfile\)=[a-z|A-Z|/|\.]*@\1=/dev/null@' /etc/supervisor/superv
 
 EXPOSE 80 1984
 
-VOLUME ["/etc/xymon", "/var/lib/xymon", "/var/log/xymon", "/var/log/nginx"]
+VOLUME ["/etc/xymon", "/var/lib/xymon", "/var/log/xymon", "/var/log/nginx", "/var/lib/logrotate"]
 
 ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
