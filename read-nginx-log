@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use threads;
+use IO::Handle;
+
+sub _read {
+	my ($_dir, $_file) = @_;
+	my $_path_file = sprintf("%s/%s.log", $_dir, $_file);
+	my $_fifo_fh;
+	open($_fifo_fh, "+< $_path_file") || die "KO";
+
+	while (<$_fifo_fh>)
+	{
+		printf ("%s : %s", $_file, $_);
+		select()->flush();
+	}
+	close $_fifo_fh;
+	exit (0);
+}
+
+my $_path = "/var/log/nginx/";
+
+threads->new(\&_read, $_path, "error");
+threads->new(\&_read, $_path, "access");
+
+while (threads->list(threads::running) == 2) {
+	sleep (1);
+}
+
+exit;
