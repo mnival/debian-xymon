@@ -28,8 +28,7 @@ RUN mkdir /etc/nginx/sites-default-enabled /etc/nginx/sites-default-available &&
 RUN tar -C /etc/xymon -czf /root/xymon-config.tgz . && \
 	tar -C /var/lib/xymon -czf /root/xymon-data.tgz .
 
-RUN mkfifo /var/log/xymon/acknowledge.log && \
-	mkfifo /var/log/xymon/alert.log && \
+RUN mkfifo /var/log/xymon/alert.log && \
 	mkfifo /var/log/xymon/clientdata.log && \
 	mkfifo /var/log/xymon/combostatus.log && \
 	mkfifo /var/log/xymon/history.log && \

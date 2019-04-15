@@ -22,7 +22,6 @@ sub _read {
 
 my $_path = "/var/log/xymon/";
 
-threads->new(\&_read, $_path, "acknowledge");
 threads->new(\&_read, $_path, "alert");
 threads->new(\&_read, $_path, "clientdata");
 threads->new(\&_read, $_path, "combostatus");
@@ -38,7 +37,7 @@ threads->new(\&_read, $_path, "xymonlaunch");
 threads->new(\&_read, $_path, "xymonnet");
 threads->new(\&_read, $_path, "xymonnetagain");
 
-while (threads->list(threads::running) == 15) {
+while (threads->list(threads::running) == 14) {
 	sleep (1);
 }
 
