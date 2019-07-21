@@ -6,6 +6,7 @@ LABEL maintainer="Michael Nival <docker@mn-home.fr>" \
 	docker.cmd="printf "ssmtp.ssmtp.conf.mailhub=mail.example.com\nssmtp.ssmtp.conf.AuthUser=user\nssmtp.ssmtp.conf.AuthPass=password\nssmtp.ssmtp.conf.AuthMethod=LOGIN\nssmtp.ssmtp.conf.UseTLS=Yesssmtp.revaliases=local_account:outgoing_address:mailhub[;local_account:outgoing_address:mailhub]\n" > /tmp/env-file && docker run -d -p 80:80 -p 1984:1984 -v /etc/xymon:/etc/xymon -v /var/lib/xymon:/var/lib/xymon --env-file /tmp/env-file --hostname xymon --name xymon mnival/debian-xymon"
 
 RUN printf "deb http://ftp.debian.org/debian/ stable main\ndeb http://ftp.debian.org/debian/ stable-updates main\ndeb http://security.debian.org/ stable/updates main\n" >> /etc/apt/sources.list.d/stable.list && \
+	printf "deb http://ftp.debian.org/debian/ oldstable main\ndeb http://ftp.debian.org/debian/ oldstable-updates main\ndeb http://security.debian.org/ oldstable/updates main\n" >> /etc/apt/sources.list.d/oldstable.list && \
 	cat /dev/null > /etc/apt/sources.list && \
 	export DEBIAN_FRONTEND=noninteractive && \
 	apt update && \
